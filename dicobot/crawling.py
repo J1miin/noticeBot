@@ -33,7 +33,7 @@ def crawl_notice(url):
                 match = re.search(r'goDetail\((\d+)\)', onclick_value)
                 if match:
                     detail_id = match.group(1)  # 숫자 추출
-                    link = f"https://www.dongguk.edu/article/HAKSANOTICE/detail/{detail_id}"  # 링크 생성
+                    link = f"{url[:-4]}detail/{detail_id}"  # 링크 생성
                 else:
                     link = '링크 없음'
             else:
