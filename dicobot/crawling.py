@@ -6,8 +6,13 @@ import re
 def crawl_notice(url):
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
+    # for debugging
+    # fixed_date = datetime(2025, 3, 7)
+    # today = fixed_date.strftime('%Y.%m.%d.')
+    # today_alt = fixed_date.strftime('%Y-%m-%d')
     
     today = datetime.today().strftime('%Y.%m.%d.')
+    today_alt = datetime.today().strftime('%Y-%m-%d')
     y = datetime.today().strftime('%Y')
     m = datetime.today().strftime('%m')
     d = datetime.today().strftime('%d')
@@ -34,6 +39,7 @@ def crawl_notice(url):
                 if match:
                     detail_id = match.group(1)  # 숫자 추출
                     link = f"{url[:-4]}detail/{detail_id}"  # 링크 생성
+                    
                 else:
                     link = '링크 없음'
             else:
@@ -52,7 +58,26 @@ def crawl_notice(url):
                 # 오늘 날짜의 공지사항만 추가
                 if notice_date == today:
                     notices.append(f"{title}\n{link}")
-    
+
+    # 새로운 구조 처리
+    for item in soup.select('li.nlist'):
+        title_tag = item.select_one('div.tit a')
+        if title_tag:
+            title = title_tag.get_text(strip=True)
+            onclick_value = title_tag.get('onclick', '')
+            match = re.search(r'goDetail\((\d+)\)', onclick_value)
+            if match:
+                detail_id = match.group(1)
+                link = f"{url[:-4]}detail/{detail_id}"
+            else:
+                link = '링크 없음'
+            
+            date_tag = item.select_one('ul.etc li.date')
+            if date_tag:
+                notice_date = date_tag.get_text(strip=True)
+                if notice_date == today_alt:  # 새로운 구조에서 사용하는 날짜 형식과 비교
+                    notices.append(f"{title}\n{link}")
+
     # 오늘 날짜에 올라온 공지가 없으면 안내 문구 추가
     if len(notices) == 1:  # 첫 번째 항목은 "오늘 공지입니다."라서, 그 이후에 공지사항이 없으면
         notices.append("오늘 올라온 공지가 없습니다.")
